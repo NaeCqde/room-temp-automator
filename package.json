@@ -5,7 +5,7 @@
     "scripts": {
         "start": "bun run dev",
         "dev": "bun run src/index.ts",
-        "list-devices": "bun run src/list-devices.ts",
+        "list-devices": "bun run src/index.ts list-devices",
         "build": "bun build src/index.ts --compile --outfile room-temp-automator"
     },
     "devDependencies": {

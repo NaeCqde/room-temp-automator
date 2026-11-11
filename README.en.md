@@ -5,7 +5,18 @@ English | [日本語](README.md)
 A small daemon that polls the room temperature and, the moment it **crosses** a configured threshold (rising or falling), runs an action you attached to that trigger.
 For example: "switch the air conditioner to cooling when it rises above 25.5 °C" or "switch to heating when it drops to 24 °C or below".
 
-Both how the temperature is read (sensor) and what is executed (action) are plugins.
+## Why
+
+Apple Home automations ("when the temperature rises above…") often just don't run, even when the condition is met. So I wrote my own: it runs on a PC or a Raspberry Pi, polls the sensor itself, and reliably runs the action the moment a threshold is crossed.
+
+## Not only for temperature
+
+A trigger only watches for "a quantity crossed a threshold upward or downward". As long as a sensor plugin returns a number, it works for anything quantitative (you write the sensor and action plugins yourself), for example:
+
+- humidity, CO₂, illuminance or power consumption controlling a device
+- values from an external API (forecast temperature, electricity price, stock price...) polled to send a notification or operate something
+
+Both how the value is read (sensor) and what is executed (action) are plugins.
 
 | Kind | Built-in plugin | What it does |
 |---|---|---|
@@ -30,7 +41,7 @@ Each executable has a `.sha256` next to it. They are standalone (the Bun runtime
 
 1. Copy `config.example.toml` to `config.toml` in the folder you run the program from (the current working directory). Only `config.toml` is read; no environment variables / `.env`.
 2. Set the SwitchBot `token` / `secret` in `[sensor.config]`. To get them: SwitchBot app → Profile → Settings → About → tap the app version repeatedly → Developer Options.
-3. If you don't know the `device_id`, list your devices by running `bun run list-devices` from source with the token/secret set (the executable does not include this command) and put the deviceId of the temperature-reporting device (Hub 3, Meter...) into `[sensor.config].device_id`.
+3. If you don't know the `device_id`, list your devices by running `room-temp-automator list-devices` with the token/secret set (from source: `bun run list-devices`) and put the deviceId of the temperature-reporting device (Hub 3, Meter...) into `[sensor.config].device_id`.
 4. Start [switchbot-aircon](https://github.com/NaeCqde/switchbot-aircon) and set its address in `[plugins.switchbot-aircon].base_url`.
 
 > `config.toml` holds your credentials. It is in `.gitignore`; never commit it.
@@ -39,6 +50,7 @@ Each executable has a `.sha256` next to it. They are standalone (the Bun runtime
 
 ```bash
 ./room-temp-automator-macOS-aarch64
+./room-temp-automator-macOS-aarch64 list-devices   # list SwitchBot devices
 ```
 
 ## Run / build from source
