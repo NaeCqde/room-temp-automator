@@ -1,5 +1,6 @@
 import { parse } from 'smol-toml';
 
+import { DEFAULT_HTTP, type HttpOptions } from './http.ts';
 import type {
     ActionDef,
     Config,
@@ -100,6 +101,21 @@ function parseStartup(raw: any): StartupConfig {
     };
 }
 
+function parseHttp(raw: any): HttpOptions {
+    const num = (value: unknown, fallback: number, name: string, min: number): number => {
+        const n = value === undefined ? fallback : Number(value);
+        if (!Number.isFinite(n) || n < min) {
+            throw new Error(`[ERROR] http.${name} must be a number >= ${min}`);
+        }
+        return n;
+    };
+    return {
+        retries: Math.floor(num(raw?.retries, DEFAULT_HTTP.retries, 'retries', 0)),
+        timeoutMs: num(raw?.timeout_seconds, DEFAULT_HTTP.timeoutMs / 1000, 'timeout_seconds', 0.1) * 1000,
+        retryDelayMs: num(raw?.retry_delay_seconds, DEFAULT_HTTP.retryDelayMs / 1000, 'retry_delay_seconds', 0) * 1000,
+    };
+}
+
 export async function loadConfig(path: string = resolveConfigPath()): Promise<Config> {
     const file = Bun.file(path);
     if (!(await file.exists())) {
@@ -108,6 +124,7 @@ export async function loadConfig(path: string = resolveConfigPath()): Promise<Co
 
     const raw = parse(await file.text()) as any;
 
+    const http = parseHttp(raw.http);
     const sensor = parseSensor(raw.sensor);
     const startup = parseStartup(raw.startup);
     const triggers = parseTriggers(raw.triggers);
@@ -123,11 +140,19 @@ export async function loadConfig(path: string = resolveConfigPath()): Promise<Co
         }
     }
 
-    return { sensor, startup, triggers, actions, plugins };
+    return { http, sensor, startup, triggers, actions, plugins };
 }
 
-// No env var override anymore (config is TOML-only) — only the default path or
-// an explicit path passed as the first CLI argument.
+// Config path: `--config <path>` / `-c <path>`, otherwise config.toml in the current directory.
 function resolveConfigPath(): string {
-    return process.argv[2] ?? DEFAULT_CONFIG_PATH;
+    const args = process.argv.slice(2);
+    const i = args.findIndex((a) => a === '--config' || a === '-c');
+    if (i !== -1) {
+        const path = args[i + 1];
+        if (!path) {
+            throw new Error('[ERROR] --config requires a path');
+        }
+        return path;
+    }
+    return DEFAULT_CONFIG_PATH;
 }

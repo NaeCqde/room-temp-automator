@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { fetchWithRetry } from '../../http.ts';
 import type { SensorPlugin } from '../../types.ts';
 
 // Reads room temperature from a SwitchBot device (e.g. Hub 3, Meter, MeterPlus)
@@ -37,17 +38,13 @@ export const switchbotHubSensor: SensorPlugin = {
             );
         }
 
-        const { t, nonce, sign } = signRequest(token, secret);
-
-        const response = await fetch(`https://api.switch-bot.com/v1.1/devices/${deviceId}/status`, {
-            method: 'GET',
-            headers: {
-                Authorization: token,
-                sign,
-                t,
-                nonce,
-                'Content-Type': 'application/json; charset=utf8',
-            },
+        // Signed again for every attempt (new timestamp and nonce)
+        const response = await fetchWithRetry('switchbot-hub', `https://api.switch-bot.com/v1.1/devices/${deviceId}/status`, () => {
+            const { t, nonce, sign } = signRequest(token, secret);
+            return {
+                method: 'GET',
+                headers: { Authorization: token, sign, t, nonce, 'Content-Type': 'application/json; charset=utf8' },
+            };
         });
 
         if (!response.ok) {

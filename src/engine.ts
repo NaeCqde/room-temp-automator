@@ -1,5 +1,6 @@
 import { actionPlugins } from './plugins/actions/index.ts';
 import { sensorPlugins } from './plugins/sensors/index.ts';
+import { setHttpOptions } from './http.ts';
 import type { Config, Trigger } from './types.ts';
 
 // Edge-detection: a trigger fires once when the temperature crosses its threshold,
@@ -143,6 +144,7 @@ async function fireAction(config: Config, triggerId: number, reason: FireReason)
 
 export async function runLoop(config: Config): Promise<void> {
     validatePlugins(config);
+    setHttpOptions(config.http);
     const sensor = sensorPlugins[config.sensor.plugin]!;
 
     console.info(

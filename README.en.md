@@ -51,6 +51,7 @@ Each executable has a `.sha256` next to it. They are standalone (the Bun runtime
 ```bash
 ./room-temp-automator-macOS-aarch64
 ./room-temp-automator-macOS-aarch64 list-devices   # list SwitchBot devices
+./room-temp-automator-macOS-aarch64 --config /path/to/config.toml   # use another config file
 ```
 
 ## Run / build from source
@@ -94,6 +95,17 @@ base_url = "http://127.0.0.1:10510"
 ```
 
 Add as many `[triggers.<id>]` / `[actions.<id>]` pairs as you need.
+
+### HTTP timeout and retries
+
+Every HTTP request a plugin makes (SwitchBot API, switchbot-aircon) has a timeout and is retried on network errors, timeouts, HTTP 429 and 5xx, waiting twice as long each time (at most 30 s, or the server's `Retry-After`). Other 4xx responses (e.g. a wrong token) are not retried. Since a trigger fires only once, at the moment of the crossing, this keeps a temporary failure from losing the action.
+
+```toml
+[http]                      # all optional; these are the defaults
+retries = 3                 # retries after the first attempt (0 = try once)
+timeout_seconds = 10        # timeout of each attempt
+retry_delay_seconds = 1     # wait before the first retry
+```
 
 ### Startup behaviour
 

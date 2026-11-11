@@ -1,7 +1,8 @@
+import { fetchWithRetry } from '../../http.ts';
 import type { ActionPlugin } from '../../types.ts';
 
 // Executes an action by calling the switchbot-aircon HTTP API
-// (see C:\Users\qwo\Documents\work\switchbot-aircon), which must be running separately.
+// (https://github.com/NaeCqde/switchbot-aircon), which must be running separately.
 // The payload is passed through as-is to its `/parameter/{temperature},{mode},{fanSpeed},{power}` route.
 export const switchbotAirconAction: ActionPlugin = {
     name: 'switchbot-aircon',
@@ -9,9 +10,7 @@ export const switchbotAirconAction: ActionPlugin = {
     async execute(payload, config) {
         const baseUrl = ((config.base_url as string | undefined) ?? 'http://127.0.0.1:10510').replace(/\/$/, '');
 
-        const response = await fetch(`${baseUrl}/parameter/${payload}`, {
-            method: 'POST',
-        });
+        const response = await fetchWithRetry('switchbot-aircon', `${baseUrl}/parameter/${payload}`, { method: 'POST' });
 
         if (!response.ok) {
             throw new Error(

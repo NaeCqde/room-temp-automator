@@ -3,6 +3,14 @@
 # Copy this to config.toml (gitignored, since it will hold your SwitchBot
 # token/secret) in the current working directory and fill in the blanks.
 
+[http]
+# Every HTTP request made by the plugins (SwitchBot API, switchbot-aircon) has a timeout and is retried
+# on network errors, timeouts, HTTP 429 and 5xx (not on other 4xx, e.g. a wrong token). The wait before
+# each retry doubles (at most 30 s). All keys are optional; these are the defaults.
+retries = 3               # retries after the first attempt (0 = try once)
+timeout_seconds = 10      # timeout of each attempt
+retry_delay_seconds = 1   # wait before the first retry
+
 [sensor]
 # Which sensor plugin to use to read the room temperature. Built-in: "switchbot-hub"
 # (reads a SwitchBot device's temperature via the official Cloud API, e.g. Hub 3 / Meter).

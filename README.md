@@ -51,6 +51,7 @@ Apple ホームの「オートメーション」(温度が一定以上/以下に
 ```bash
 ./room-temp-automator-macOS-aarch64
 ./room-temp-automator-macOS-aarch64 list-devices   # SwitchBot デバイス一覧
+./room-temp-automator-macOS-aarch64 --config /path/to/config.toml   # 設定ファイルを指定
 ```
 
 ## ソースから実行・ビルド
@@ -117,6 +118,17 @@ base_url = "http://127.0.0.1:10510"
 
 トリガーは `[triggers.<id>]` を追加するだけで何個でも作成できます。対応する `[actions.<id>]`
 （同じ `id`）を用意すれば、トリガーごとに異なるプラグイン・異なる内容を実行できます。
+
+### HTTP のタイムアウトとリトライ
+
+プラグインが行うすべての HTTP リクエスト(SwitchBot API、switchbot-aircon)にはタイムアウトとリトライがあります。ネットワークエラー、タイムアウト、HTTP 429 / 5xx の場合に再試行し、待ち時間は毎回 2 倍になります(最大 30 秒。`Retry-After` があればそれに従います)。トークン間違いなどの 4xx は再試行しません。トリガーは「またいだ瞬間」に 1 回しか発火しないため、一時的な失敗でアクションが失われないようにするための仕組みです。
+
+```toml
+[http]                      # すべて省略可。値は既定値
+retries = 3                 # 最初の試行のあとの再試行回数 (0 = 再試行しない)
+timeout_seconds = 10        # 1 回の試行のタイムアウト
+retry_delay_seconds = 1     # 最初の再試行までの待ち時間
+```
 
 ### 起動時の最低/最高temp実行について
 

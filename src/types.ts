@@ -1,3 +1,5 @@
+import type { HttpOptions } from './http.ts';
+
 export type Direction = 'up' | 'down';
 
 export type Trigger = {
@@ -38,6 +40,7 @@ export type StartupConfig = {
 };
 
 export type Config = {
+    http: HttpOptions;
     sensor: SensorConfig;
     startup: StartupConfig;
     triggers: Trigger[];

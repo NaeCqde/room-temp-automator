@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { loadConfig } from './config.ts';
+import { fetchWithRetry, setHttpOptions } from './http.ts';
 
 // Convenience script to look up a device's deviceId (e.g. your Hub 3) for use as
 // `device_id` in config.toml's [sensor.config]. Uses the same official Cloud API
@@ -8,6 +9,7 @@ import { loadConfig } from './config.ts';
 
 export async function listDevices(): Promise<void> {
     const config = await loadConfig();
+    setHttpOptions(config.http);
     const token = config.sensor.config.token as string | undefined;
     const secret = config.sensor.config.secret as string | undefined;
 
@@ -16,20 +18,14 @@ export async function listDevices(): Promise<void> {
         process.exit(1);
     }
 
-    const t = Date.now().toString();
-    const nonce = crypto.randomUUID();
-    const data = token + t + nonce;
-    const sign = crypto.createHmac('sha256', secret).update(Buffer.from(data, 'utf-8')).digest('base64');
-
-    const response = await fetch('https://api.switch-bot.com/v1.1/devices', {
-        method: 'GET',
-        headers: {
-            Authorization: token,
-            sign,
-            t,
-            nonce,
-            'Content-Type': 'application/json; charset=utf8',
-        },
+    const response = await fetchWithRetry('list-devices', 'https://api.switch-bot.com/v1.1/devices', () => {
+        const t = Date.now().toString();
+        const nonce = crypto.randomUUID();
+        const sign = crypto.createHmac('sha256', secret).update(Buffer.from(token + t + nonce, 'utf-8')).digest('base64');
+        return {
+            method: 'GET',
+            headers: { Authorization: token, sign, t, nonce, 'Content-Type': 'application/json; charset=utf8' },
+        };
     });
 
     if (!response.ok) {
