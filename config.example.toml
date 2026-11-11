@@ -1,0 +1,84 @@
+# room-temp-automator config template.
+#
+# Copy this to config.toml (gitignored, since it will hold your SwitchBot
+# token/secret) in the current working directory and fill in the blanks.
+
+[sensor]
+# Which sensor plugin to use to read the room temperature. Built-in: "switchbot-hub"
+# (reads a SwitchBot device's temperature via the official Cloud API, e.g. Hub 3 / Meter).
+plugin = "switchbot-hub"
+poll_interval_seconds = 60
+
+[sensor.config]
+# Credentials for the SwitchBot official Cloud API.
+# How to obtain: SwitchBot app -> Profile -> Settings -> About (基本データ)
+#   -> tap the version number repeatedly -> Developer Options -> generate Token/Secret
+token = ""
+secret = ""
+# deviceId of your Hub 3 (or other temperature-reporting device).
+# Find it by running: bun run list-devices
+device_id = ""
+
+[startup]
+# At startup we only have one temperature reading, so there's no "crossing" to
+# detect yet. These let the corresponding action fire immediately if the room is
+# already at/beyond the coldest or hottest configured trigger temp, instead of
+# waiting for a crossing that might never happen. Disable either independently.
+fire_below_min = true
+fire_above_max = true
+
+[startup.custom_action]
+# Also runs once at startup, when the current temperature is NOT already covered
+# by fire_below_min/fire_above_max above (i.e. it's strictly between the lowest
+# and highest configured trigger temps here, since both are enabled). Disabled by
+# default; plugin/payload may be left blank when disabled.
+enabled = false
+plugin = ""
+payload = ""
+
+# Each trigger fires once when the temperature crosses `temp` in the given `direction`.
+# Keyed by id (e.g. [triggers.1]); a trigger's id must have a matching [actions.<id>]
+# entry — that's what links a trigger to the action it runs.
+
+[triggers.1]
+direction = "up"
+temp = 25.5
+
+[triggers.2]
+direction = "down"
+temp = 25
+
+[triggers.3]
+direction = "down"
+temp = 24
+
+[triggers.4]
+direction = "up"
+temp = 24.5
+
+# Each action defines what to run (which plugin) and what to pass it (payload).
+# Keyed by id (matching the triggers key that fires it). The payload's
+# format/meaning is entirely up to the plugin.
+
+[actions.1]
+plugin = "switchbot-aircon"
+payload = "23,cool,3,on"
+
+[actions.2]
+plugin = "switchbot-aircon"
+payload = "23,fan,2,on"
+
+[actions.3]
+plugin = "switchbot-aircon"
+payload = "25,heat,3,on"
+
+[actions.4]
+plugin = "switchbot-aircon"
+payload = "25,fan,2,on"
+
+# Per-plugin config, keyed by plugin name. Used by action plugins (and referenced
+# above by actions.<id>.plugin).
+[plugins.switchbot-aircon]
+# Base URL of the running switchbot-aircon HTTP server (see
+# https://github.com/NaeCqde/switchbot-aircon, LISTEN env var there).
+base_url = "http://127.0.0.1:10510"
