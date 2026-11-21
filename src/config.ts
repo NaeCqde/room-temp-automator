@@ -1,5 +1,6 @@
 import { parse } from 'smol-toml';
 
+import { findSettingsFile } from './settings.ts';
 import { DEFAULT_HTTP, type HttpOptions } from './http.ts';
 import type {
     ActionDef,
@@ -143,7 +144,7 @@ export async function loadConfig(path: string = resolveConfigPath()): Promise<Co
     return { http, sensor, startup, triggers, actions, plugins };
 }
 
-// Config path: `--config <path>` / `-c <path>`, otherwise config.toml in the current directory.
+// Config path: `--config <path>` / `-c <path>`, otherwise config.toml in the current directory (only when it has none, the one next to the executable).
 function resolveConfigPath(): string {
     const args = process.argv.slice(2);
     const i = args.findIndex((a) => a === '--config' || a === '-c');
@@ -154,5 +155,5 @@ function resolveConfigPath(): string {
         }
         return path;
     }
-    return DEFAULT_CONFIG_PATH;
+    return findSettingsFile(DEFAULT_CONFIG_PATH);
 }
