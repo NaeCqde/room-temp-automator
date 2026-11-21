@@ -1,4 +1,3 @@
-import './settings.ts';
 import { loadConfig } from './config.ts';
 import { runLoop } from './engine.ts';
 import { listDevices } from './list-devices.ts';
